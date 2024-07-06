@@ -35,12 +35,12 @@ Ganache fornisce un ambiente blockchain locale per lo sviluppo e il testing di c
 	- Compila i Contratti:
 Nel terminale, naviga nella cartella del tuo progetto e esegui il comando per compilare i contratti con Truffle:
 
-truffle compile
+			truffle compile
 
 7. Migra i Contratti:
 Esegui il comando per migrare i contratti sulla blockchain locale fornita da Ganache:
 
-truffle migrate --network development
+		truffle migrate --network development
 
 Se hai già migrato i contratti in precedenza e vuoi resettare la migrazione:
 
