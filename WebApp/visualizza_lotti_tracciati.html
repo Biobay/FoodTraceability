@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizza Lotti</title>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.6.0/dist/web3.min.js"></script>
+</head>
+<style>
+  body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            margin-left: 50px; /* Margine a sinistra */
+            margin-right: 300px; /* Margine a destra */
+        }
+
+        .container {
+            max-width: 800px; /* Larghezza massima del contenitore */
+            margin: 20px auto; /* Margine esterno e centratura */
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #007BFF;
+            margin-bottom: 20px;
+            text-align: left; /* Allinea il titolo a sinistra */
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #007BFF; /* Colore della bordatura sinistra */
+        }
+
+        ul li strong {
+            font-weight: bold;
+            color: #007BFF; /* Colore per i titoli in grassetto */
+        }
+
+        ul li hr {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+<body>
+    <h1>Lotti Registrati</h1>
+    <ul id="lotsList"></ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+            } else {
+                console.log('MetaMask is not installed!');
+                return;
+            }
+
+            const abi = [
+                {
+                  "anonymous": false,
+                  "inputs": [
+                    {
+                      "indexed": true,
+                      "internalType": "uint256",
+                      "name": "lotId",
+                      "type": "uint256"
+                    },
+                    {
+                      "indexed": false,
+                      "internalType": "string",
+                      "name": "species",
+                      "type": "string"
+                    },
+                    {
+                      "indexed": false,
+                      "internalType": "string",
+                      "name": "variety",
+                      "type": "string"
+                    },
+                    {
+                      "indexed": false,
+                      "internalType": "uint256",
+                      "name": "cultivatedArea",
+                      "type": "uint256"
+                    },
+                    {
+                      "indexed": false,
+                      "internalType": "string",
+                      "name": "company",
+                      "type": "string"
+                    }
+                  ],
+                  "name": "LotRegistered",
+                  "type": "event"
+                },
+                {
+                  "inputs": [
+                    {
+                      "internalType": "uint256",
+                      "name": "",
+                      "type": "uint256"
+                    }
+                  ],
+                  "name": "lots",
+                  "outputs": [
+                    {
+                      "internalType": "uint256",
+                      "name": "lotId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "species",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "variety",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "cultivatedArea",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "plantingDensity",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "landId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "company",
+                      "type": "string"
+                    }
+                  ],
+                  "stateMutability": "view",
+                  "type": "function",
+                  "constant": true
+                },
+                {
+                  "inputs": [],
+                  "name": "nextLotId",
+                  "outputs": [
+                    {
+                      "internalType": "uint256",
+                      "name": "",
+                      "type": "uint256"
+                    }
+                  ],
+                  "stateMutability": "view",
+                  "type": "function",
+                  "constant": true
+                },
+                {
+                  "inputs": [
+                    {
+                      "internalType": "uint256",
+                      "name": "_lotId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "_species",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "_variety",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "_cultivatedArea",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "_plantingDensity",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "_landId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "_company",
+                      "type": "string"
+                    }
+                  ],
+                  "name": "registerLot",
+                  "outputs": [],
+                  "stateMutability": "nonpayable",
+                  "type": "function"
+                },
+                {
+                  "inputs": [
+                    {
+                      "internalType": "uint256",
+                      "name": "_lotId",
+                      "type": "uint256"
+                    }
+                  ],
+                  "name": "getLotDetails",
+                  "outputs": [
+                    {
+                      "internalType": "string",
+                      "name": "species",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "variety",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "cultivatedArea",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "plantingDensity",
+                      "type": "string"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "landId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "company",
+                      "type": "string"
+                    }
+                  ],
+                  "stateMutability": "view",
+                  "type": "function",
+                  "constant": true
+                }
+            ];
+
+            const contractAddress = '0x194Fb64F6153EAe52D415564029b5e79e5E6a5Ee'; // Indirizzo del contratto
+            const contract = new web3.eth.Contract(abi, contractAddress);
+
+            const lotsList = document.getElementById('lotsList');
+
+            // Carica i lotti registrati all'avvio della pagina
+            loadRegisteredLots();
+
+            async function loadRegisteredLots() {
+                lotsList.innerHTML = ''; // Pulisce l'elenco dei lotti prima di aggiornarlo
+
+                const nextLotId = await contract.methods.nextLotId().call();
+                for (let i = 0; i < nextLotId; i++) {
+                    try {
+                        const lotDetails = await contract.methods.getLotDetails(i).call();
+                        
+                        // Controlla se il lotto è stato registrato
+                        if (lotDetails.species && lotDetails.species !== '' && lotDetails.species !== null) {
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `
+                                <strong>ID Lotto:</strong> ${i}<br>
+                                <strong>Specie:</strong> ${lotDetails.species}<br>
+                                <strong>Varietà:</strong> ${lotDetails.variety}<br>
+                                <strong>Superficie Coltivata:</strong> ${lotDetails.cultivatedArea} mq<br>
+                                <strong>Densità di Impianto:</strong> ${lotDetails.plantingDensity}<br>
+                                <strong>ID Terreno:</strong> ${lotDetails.landId}<br>
+                                <strong>Azienda:</strong> ${lotDetails.company}<br>
+                                <hr>
+                            `;
+                            lotsList.appendChild(listItem);
+                        }
+                    } catch (error) {
+                        console.error(`Errore nel recuperare i dettagli del lotto ${i}:`, error);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

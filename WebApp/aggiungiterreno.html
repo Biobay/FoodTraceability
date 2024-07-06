@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Terreni</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+</head>
+
+<style>
+ body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #007BFF;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form textarea {
+            width: calc(100% - 12px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form textarea {
+            height: 100px;
+        }
+
+        form button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        form button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        ul li:last-child {
+            border-bottom: none;
+        }
+</style>
+<body>
+    <div id="app">
+        <h1>Registro Terreni</h1>
+
+        <form id="registerLandForm">
+            <label for="landName">Nome Terreno:</label>
+            <input type="text" id="landName" required><br>
+
+            <label for="addressLocation">Indirizzo:</label>
+            <input type="text" id="addressLocation" required><br>
+
+            <label for="totalArea">Superficie Totale:</label>
+            <input type="number" id="totalArea" required><br>
+
+            <label for="company">Azienda:</label>
+            <input type="text" id="company" required><br>
+
+            <label for="additionalInfo">Informazioni Aggiuntive:</label>
+            <textarea id="additionalInfo" required></textarea><br>
+
+            <button type="submit">Registra Terreno</button>
+        </form>
+
+        <h2>Terreni Registrati</h2>
+        <ul id="landsList"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
+            } else if (window.web3) {
+                window.web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log('Non è stato rilevato un provider Ethereum. Assicurati di utilizzare MetaMask o un altro provider compatibile.');
+                return;
+            }
+
+            const web3 = window.web3;
+
+            // Indirizzo del contratto LandRegistry su Ganache
+            const contractAddress = '0xAF314b557584D72b630628422ce2A8793ab7291c';
+
+            // ABI del contratto LandRegistry
+            const abi = [
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "landId",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "company",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "LandRegistered",
+                    "type": "event"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "lands",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "landId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "company",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [],
+                    "name": "nextLandId",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "_name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_company",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "registerLand",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+
+            const landRegistryContract = new web3.eth.Contract(abi, contractAddress);
+
+            // Form di registrazione terreno
+            const registerLandForm = document.getElementById('registerLandForm');
+            const landsListElement = document.getElementById('landsList');
+
+            registerLandForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const name = document.getElementById('landName').value;
+                const addressLocation = document.getElementById('addressLocation').value;
+                const totalArea = document.getElementById('totalArea').value;
+                const company = document.getElementById('company').value;
+                const additionalInfo = document.getElementById('additionalInfo').value;
+
+                try {
+                    const accounts = await web3.eth.getAccounts();
+                    await landRegistryContract.methods.registerLand(name, addressLocation, totalArea, company, additionalInfo).send({ from: accounts[0] });
+
+                    const nextLandId = await landRegistryContract.methods.nextLandId().call();
+                    const landDetails = await landRegistryContract.methods.lands(nextLandId - 1).call();
+
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `ID: ${landDetails.landId}, Nome: ${landDetails.name}, Indirizzo: ${landDetails.addressLocation}, Superficie: ${landDetails.totalArea}, Azienda: ${landDetails.company}, Informazioni: ${landDetails.additionalInfo}`;
+                    landsListElement.appendChild(listItem);
+
+                    registerLandForm.reset();
+                } catch (error) {
+                    console.error('Errore durante la registrazione del terreno:', error);
+                }
+            });
+
+            // Carica i terreni registrati all'avvio
+            const loadLands = async () => {
+                const nextLandId = await landRegistryContract.methods.nextLandId().call();
+                for (let i = 0; i < nextLandId; i++) {
+                    const landDetails = await landRegistryContract.methods.lands(i).call();
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `ID: ${landDetails.landId}, Nome: ${landDetails.name}, Indirizzo: ${landDetails.addressLocation}, Superficie: ${landDetails.totalArea}, Azienda: ${landDetails.company}, Informazioni: ${landDetails.additionalInfo}`;
+                    landsListElement.appendChild(listItem);
+                }
+            };
+
+            loadLands();
+        });
+    </script>
+</body>
+</html>

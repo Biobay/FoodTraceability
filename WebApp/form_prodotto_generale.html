@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Prodotto Generale</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-wU6dUg2MnOzJ1n3iP24yjLjMF8gF1r9EiCxy5Oo49YbG2RYeyDj2eTGt7kty3L1My9yV8LZpGNGEyffgulQClA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        #app {
+            background: #fff;
+            padding: 100px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 600px; /* Larghezza del contenitore principale */
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #007BFF;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form {
+            width: 100%; /* Larghezza massima del form */
+            margin: 0 auto; /* Centra il form orizzontalmente */
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box; /* Calcola il padding e il bordo nel calcolo della larghezza */
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        form input[type="text"],
+        form input[type="number"] {
+            width: calc(100% - 20px); /* Utilizza tutta la larghezza disponibile con spazio per il padding */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form textarea {
+            width: calc(100% - 20px); /* Utilizza tutta la larghezza disponibile con spazio per il padding */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical; /* Permette la ridimensionabilità verticale */
+            height: 100px; /* Altezza iniziale */
+        }
+
+        form button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        form button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        p#transactionStatus {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+
+        p#transactionHash {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Aggiungi Prodotto Generale</h1>
+
+        <form id="addProductForm">
+            <label for="productId">ID del Prodotto:</label>
+            <input type="text" id="productId" name="productId" required><br><br>
+
+            <label for="productName">Nome del Prodotto:</label>
+            <input type="text" id="productName" name="productName" required><br><br>
+
+            <label for="processingLocation">Luogo di Lavorazione:</label>
+            <input type="text" id="processingLocation" name="processingLocation" required><br><br>
+
+            <label for="batchNumber">Numero del Lotto:</label>
+            <input type="text" id="batchNumber" name="batchNumber" required><br><br>
+
+            <label for="productionDate">Data di Produzione e/o di lavorazione:</label>
+            <input type="text" id="productionDate" name="productionDate" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}" required><br><br>
+
+            <label for="eventPerformed">Evento Svolto:</label>
+            <textarea id="eventPerformed" name="eventPerformed" required></textarea><br><br>
+
+            <button type="submit">Aggiungi Prodotto</button>
+        </form>
+
+        <p id="transactionStatus"></p>
+        <p id="transactionHash"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
+            } else if (window.web3) {
+                window.web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log('Non è stato rilevato un provider Ethereum. Assicurati di utilizzare MetaMask o un altro provider compatibile.');
+                return;
+            }
+
+            const web3 = window.web3;
+
+            // Indirizzo del contratto ProdottoGenerale su Ganache (sostituisci con il tuo contratto deployato)
+            const contractAddress = '0x361b9e564901384865c3Dd913C24f471aA23E8B4'; // Inserisci l'indirizzo del contratto
+
+            // ABI del contratto ProdottoGenerale
+            const abi = [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "_productId",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_productName",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_processingLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_batchNumber",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_productionDate",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_eventPerformed",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "registerProduct",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+
+            const productContract = new web3.eth.Contract(abi, contractAddress);
+
+            const addProductForm = document.getElementById('addProductForm');
+            const transactionStatus = document.getElementById('transactionStatus');
+            const transactionHashDisplay = document.getElementById('transactionHash');
+
+            addProductForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const productId = document.getElementById('productId').value;
+                const productName = document.getElementById('productName').value;
+                const processingLocation = document.getElementById('processingLocation').value;
+                const batchNumber = document.getElementById('batchNumber').value;
+                const productionDate = document.getElementById('productionDate').value;
+                const eventPerformed = document.getElementById('eventPerformed').value;
+
+                try {
+                    const accounts = await web3.eth.getAccounts();
+                    const gas = await productContract.methods.registerProduct(
+                        productId,
+                        productName,
+                        processingLocation,
+                        batchNumber,
+                        productionDate,
+                        eventPerformed
+                    ).estimateGas();
+
+                    const result = await productContract.methods.registerProduct(
+                        productId,
+                        productName,
+                        processingLocation,
+                        batchNumber,
+                        productionDate,
+                        eventPerformed
+                    ).send({ from: accounts[0], gas });
+
+                    transactionStatus.textContent = `Transazione completata. Hash della transazione:`;
+                    const transactionHashLink = document.createElement('a');
+                    transactionHashLink.href = `https://rinkeby.etherscan.io/tx/${result.transactionHash}`;
+                    transactionHashLink.target = '_blank';
+                    transactionHashLink.textContent = result.transactionHash;
+                    transactionHashDisplay.innerHTML = '';
+                    transactionHashDisplay.appendChild(transactionHashLink);
+                } catch (error) {
+                    transactionStatus.textContent = `Errore durante l'invio della transazione: ${error.message}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Lotto</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+</head>
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+#app {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Larghezza massima del contenitore */
+    max-width: 800px; /* Massima larghezza del contenitore per evitare che diventi troppo largo */
+    margin: 20px auto; /* Margine esterno e centra il contenitore */
+    box-sizing: border-box; /* Calcola il padding e il bordo nel calcolo della larghezza */
+}
+
+h1 {
+    font-size: 2.2rem;
+    color: #007BFF;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+form {
+    width: 100%; /* Larghezza massima del form */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box; /* Calcola il padding e il bordo nel calcolo della larghezza */
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+form input[type="number"],
+form input[type="text"],
+form textarea {
+    width: calc(100% - 20px); /* Utilizza tutta la larghezza disponibile con spazio per il padding */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+form textarea {
+    height: 100px; /* Corretto errore di typo */
+}
+
+form button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+form button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+p#transactionStatus {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 20px;
+}
+
+</style>
+<body>
+    <div id="app">
+        <h1>Aggiungi Lotto</h1>
+
+        <form id="addLotForm">
+            <label for="lotId">ID del Lotto:</label>
+            <input type="number" id="lotId" name="lotId" required><br><br>
+
+            <label for="species">Specie:</label>
+            <input type="text" id="species" name="species" required><br><br>
+
+            <label for="variety">Varietà:</label>
+            <input type="text" id="variety" name="variety" required><br><br>
+
+            <label for="cultivatedArea">Superficie Coltivata (m²):</label>
+            <input type="number" id="cultivatedArea" name="cultivatedArea" required><br><br>
+
+            <label for="plantingDensity">Densità di Impianto:</label>
+            <input type="text" id="plantingDensity" name="plantingDensity" required><br><br>
+
+            <label for="landId">ID del Terreno:</label>
+            <input type="number" id="landId" name="landId" required><br><br>
+
+            <label for="company">Azienda:</label>
+            <input type="text" id="company" name="company" required><br><br>
+
+            <button type="submit">Aggiungi Lotto</button>
+        </form>
+
+        <p id="transactionStatus"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
+            } else if (window.web3) {
+                window.web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log('Non è stato rilevato un provider Ethereum. Assicurati di utilizzare MetaMask o un altro provider compatibile.');
+                return;
+            }
+
+            const web3 = window.web3;
+
+            // Indirizzo del contratto LotRegistry su Ganache (sostituisci con il tuo contratto deployato)
+            const contractAddress = '0x194Fb64F6153EAe52D415564029b5e79e5E6a5Ee'; // Inserisci l'indirizzo del contratto
+
+            // ABI del contratto LotRegistry
+            const abi = [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_lotId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_species",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_variety",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_cultivatedArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_plantingDensity",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_landId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_company",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "registerLot",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+
+            const lotRegistryContract = new web3.eth.Contract(abi, contractAddress);
+
+            const addLotForm = document.getElementById('addLotForm');
+            const transactionStatus = document.getElementById('transactionStatus');
+
+            addLotForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const lotId = document.getElementById('lotId').value;
+                const species = document.getElementById('species').value;
+                const variety = document.getElementById('variety').value;
+                const cultivatedArea = document.getElementById('cultivatedArea').value;
+                const plantingDensity = document.getElementById('plantingDensity').value;
+                const landId = document.getElementById('landId').value;
+                const company = document.getElementById('company').value;
+
+                try {
+                    const accounts = await web3.eth.getAccounts();
+                    const gas = await lotRegistryContract.methods.registerLot(
+                        lotId,
+                        species,
+                        variety,
+                        cultivatedArea,
+                        plantingDensity,
+                        landId,
+                        company
+                    ).estimateGas();
+
+                    const result = await lotRegistryContract.methods.registerLot(
+                        lotId,
+                        species,
+                        variety,
+                        cultivatedArea,
+                        plantingDensity,
+                        landId,
+                        company
+                    ).send({ from: accounts[0], gas });
+
+                    transactionStatus.textContent = `Transazione completata. Hash della transazione: ${result.transactionHash}`;
+                } catch (error) {
+                    transactionStatus.textContent = `Errore durante l'invio della transazione: ${error.message}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

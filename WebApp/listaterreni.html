@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Registry</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+</head>
+<style>
+    body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #007BFF;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 80%; /* Larghezza del li */
+            max-width: 600px; /* Larghezza massima del li per garantire una buona leggibilità */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        ul li strong {
+            font-weight: bold;
+        }
+
+        ul li hr {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+</style>
+<body>
+    <div id="app">
+        <h1>Terreni Coltivati</h1>
+
+        <div>
+         
+            <ul id="landsList"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
+            } else if (window.web3) {
+                window.web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log('Non è stato rilevato un provider Ethereum. Assicurati di utilizzare MetaMask o un altro provider compatibile.');
+                return;
+            }
+
+            const web3 = window.web3;
+
+            // Indirizzo del contratto LandRegistry su Ganache (sostituisci con il tuo indirizzo reale)
+            const contractAddress = '0xAF314b557584D72b630628422ce2A8793ab7291c';
+
+            // ABI del contratto LandRegistry
+            const abi = [
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "landId",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "company",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "LandRegistered",
+                    "type": "event"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "lands",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "landId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "company",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [],
+                    "name": "nextLandId",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "_name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_company",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "registerLand",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_landId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "getLandDetails",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "addressLocation",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "totalArea",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "company",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "additionalInfo",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                }
+            ];
+
+            const contract = new web3.eth.Contract(abi, contractAddress);
+
+            const landsList = document.getElementById('landsList');
+
+            // Carica i terreni registrati all'avvio della pagina
+            loadRegisteredLands();
+
+            async function loadRegisteredLands() {
+                landsList.innerHTML = ''; // Pulisce l'elenco dei terreni prima di aggiornarlo
+
+                const nextLandId = await contract.methods.nextLandId().call();
+                for (let i = 0; i < nextLandId; i++) {
+                    const landDetails = await contract.methods.getLandDetails(i).call();
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <strong>ID Terreno:</strong> ${i}<br>
+                        <strong>Nome:</strong> ${landDetails.name}<br>
+                        <strong>Indirizzo:</strong> ${landDetails.addressLocation}<br>
+                        <strong>Superficie Totale:</strong> ${landDetails.totalArea} mq<br>
+                        <strong>Azienda:</strong> ${landDetails.company}<br>
+                        <strong>Informazioni Aggiuntive:</strong> ${landDetails.additionalInfo}<br>
+                        <hr>
+                    `;
+                    landsList.appendChild(listItem);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

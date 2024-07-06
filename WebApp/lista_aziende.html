@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informazioni Contratto CompanyRegistry</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+</head>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px; /* Aggiunto margine esterno */
+    padding: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+#app {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 90%;
+    margin-top: 20px; /* Spazio superiore aggiunto */
+}
+
+h1 {
+    font-size: 2.2rem;
+    color: #007BFF;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+p {
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    margin-bottom: 20px; /* Aumentata la distanza tra i list items */
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+ul li strong {
+    font-weight: bold;
+}
+
+ul li hr {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    border: none;
+    border-top: 1px solid #ccc;
+}
+
+
+
+</style>
+<body>
+    <div id="app">
+        <h1>Informazioni Contratto CompanyRegistry</h1>
+
+        <div>
+            <h2>Indirizzo del Contratto:</h2>
+            <p id="contractAddress"></p>
+        </div>
+
+        <div>
+            <h2>Bilancio del Contratto:</h2>
+            <p id="contractBalance"></p>
+        </div>
+
+        <div>
+            <h2>Storage del Contratto:</h2>
+            <p id="contractStorage"></p>
+        </div>
+
+        <div>
+            <h2>Aziende Registrate:</h2>
+            <ul id="companiesList"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                await window.ethereum.enable();
+            } else if (window.web3) {
+                window.web3 = new Web3(window.web3.currentProvider);
+            } else {
+                console.log('Non è stato rilevato un provider Ethereum. Assicurati di utilizzare MetaMask o un altro provider compatibile.');
+                return;
+            }
+
+            const web3 = window.web3;
+
+            // Indirizzo del contratto CompanyRegistry su Ganache
+            const contractAddress = '0xad63004DE52AE58f0674940fF7f40592c49f8027';
+
+            // ABI aggiornata del contratto CompanyRegistry
+            const abi = [
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "companyId",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "vatNumber",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "owner",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "CompanyRegistered",
+                    "type": "event"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "companies",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "companyId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "vatNumber",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "owner",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [],
+                    "name": "nextCompanyId",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "_name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_vatNumber",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_owner",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "registerCompany",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+
+            const companyRegistryContract = new web3.eth.Contract(abi, contractAddress);
+
+            // Recupera l'indirizzo del contratto
+            const contractAddressElement = document.getElementById('contractAddress');
+            contractAddressElement.textContent = contractAddress;
+
+            // Recupera il bilancio del contratto
+            const contractBalance = await web3.eth.getBalance(contractAddress);
+            const contractBalanceElement = document.getElementById('contractBalance');
+            contractBalanceElement.textContent = web3.utils.fromWei(contractBalance, 'ether') + ' ETH';
+
+            // Recupera lo storage del contratto
+            const storageData = await companyRegistryContract.methods.nextCompanyId().call();
+            const contractStorageElement = document.getElementById('contractStorage');
+            contractStorageElement.textContent = storageData;
+
+            // Recupera i dettagli delle aziende registrate
+            const companiesListElement = document.getElementById('companiesList');
+            const nextCompanyId = await companyRegistryContract.methods.nextCompanyId().call();
+            for (let i = 0; i < nextCompanyId; i++) {
+                const companyDetails = await companyRegistryContract.methods.companies(i).call();
+                const listItem = document.createElement('li');
+                listItem.textContent = `ID: ${companyDetails.companyId}, Name: ${companyDetails.name}, VAT Number: ${companyDetails.vatNumber}, Owner: ${companyDetails.owner}`;
+                companiesListElement.appendChild(listItem);
+            }
+        });
+    </script>
+</body>
+</html>
