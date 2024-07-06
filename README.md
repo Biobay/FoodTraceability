@@ -44,7 +44,7 @@ Esegui il comando per migrare i contratti sulla blockchain locale fornita da Gan
 
 Se hai già migrato i contratti in precedenza e vuoi resettare la migrazione:
 
-truffle migrate --reset --network development
+		truffle migrate --reset --network development
 
 8.Fine
 
