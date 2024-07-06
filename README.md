@@ -9,9 +9,9 @@ Prima di tutto, assicurati di avere Node.js installato sul tuo sistema. Puoi sca
 2. Installazione di Web3.js, Ganache e Truffle:
 Apri il terminale e esegui i seguenti comandi per installare globalmente Web3.js, Ganache CLI e Truffle:
 
-npm install -g web3
-npm install -g ganache-cli
-npm install -g truffle
+		npm install -g web3
+		npm install -g ganache-cli
+		npm install -g truffle
 
 3.. Configurazione di MetaMask
 
