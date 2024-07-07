@@ -19,7 +19,7 @@ MetaMask è un’estensione del browser che ti permette di interagire con blockc
 
 Configurazione di MetaMask:
 	- Importa un account utilizzando la chiave privata fornita da Ganache.
-	- Connetti MetaMask alla rete di sviluppo utilizzando l’URL RPC http://127.0.0.1:7545 e l’ID della catena 1337.
+	- Connetti MetaMask alla rete di sviluppo utilizzando l’URL RPC http://127.0.0.1:7545 e l’ID CHAIN: 1337.
 
 4. Preparazione dell’Ambiente di Sviluppo
 
